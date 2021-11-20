@@ -3,19 +3,21 @@ import rospy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
+import tf
+from tf.transformations import euler_from_quaternion,quaternion_from_euler
 import time
 import math
 import numpy as np
 
 vx = 0
 vth = 0
-xg = 2
-yg = 2
+xg = 4
+yg = 4
 xrob = 0
 yrob = 0
 umbral = 1
-Katt = 5
-Krep = 0.001
+Katt = 1
+Krep = 0.005
 twist = Twist()
 
 
@@ -36,8 +38,8 @@ def lidar(msg):
 	for i in range(0, len(laser_ranges)):
 		if (math.isinf(laser_ranges[i])==False):
 			#print(laser_ranges[i])
-			f = (1/((laser_ranges[i])**2))*abs(math.cos(laser_angles[i]))
-			s = (1/((laser_ranges[i])**2))*abs(math.sin(laser_angles[i]))	
+			f = (1/((laser_ranges[i])**2))*math.cos(laser_angles[i])
+			s = (1/((laser_ranges[i])**2))*math.sin(laser_angles[i])
 			F=F+f
 			S=S+s
 
@@ -46,17 +48,19 @@ def lidar(msg):
 	
 
 def callback(msg):
-     global R
-     global thetarob
-     global Xatt
-     global Yatt
-     p = msg.pose.pose 
-     xrob = p.position.x
-     yrob = p.position.y
-     thetarob = p.orientation.z
-     Xatt = xg-xrob
-     Yatt = yg-yrob
-     R = np.hypot(Xatt , Yatt)
+	global R
+	global thetarob
+	global Xatt
+	global Yatt
+	p = msg.pose.pose 
+	xrob = p.position.x
+	yrob = p.position.y
+	orientation_q = msg.pose.pose.orientation
+	orientation_list=[orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+	(roll,pitch,thetarob)=euler_from_quaternion(orientation_list)
+	Xatt = xg-xrob
+	Yatt = yg-yrob
+	R = np.hypot(Xatt , Yatt)
      
 def main(R):
     
@@ -67,15 +71,16 @@ def main(R):
     
     twist.angular.z=1*(thetap-thetarob)
     pub.publish(twist)
-    time.sleep(1)
+    time.sleep(0.5)
     twist.angular.z=0
     pub.publish(twist)
-    twist.linear.x=0.3*P
+    twist.linear.x=0.2*P
     pub.publish(twist)
     #time.sleep(0.7)
     #twist.linear.x=0
     pub.publish(twist)
-    print(Xatt,Yatt,Xrep,Yrep,thetap)
+    print("FUERZAS",Xatt,Yatt,Xrep,Yrep)
+    print("ANGULOS",thetap,thetarob)
     
     
     #if R > umbral:
@@ -103,5 +108,3 @@ if __name__ == '__main__':
 		        twist.linear.x=0
                 pub.publish(twist)
 			
-
-
