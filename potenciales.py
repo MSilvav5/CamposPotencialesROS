@@ -11,11 +11,11 @@ from tf.transformations import euler_from_quaternion,quaternion_from_euler
 
 
 vx = vth = xrob = yrob = 0
-xg = 2
-yg = 7
-umbral = 1
-Katt = 2
-Krep = 0.005
+xg = 6
+yg = 6
+umbral = 1.8
+Katt = 7
+Krep = 0.009
 twist = Twist()
 
 
@@ -72,7 +72,7 @@ def main(R):
 		time.sleep(0.5)
 		twist.angular.z=0
 		pub.publish(twist)
-		twist.linear.x=0.4*Patt
+		twist.linear.x=0.05*Patt
 		pub.publish(twist)
 		print("FUERA de umbral")
 	else: 
@@ -82,7 +82,7 @@ def main(R):
 		time.sleep(0.5)
 		twist.angular.z=0
 		pub.publish(twist)
-		twist.linear.x=0.6*Patt
+		twist.linear.x=0.05*Patt
 		pub.publish(twist)
 		print("DENTRO de umbral")
 
